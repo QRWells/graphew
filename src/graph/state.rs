@@ -1,11 +1,11 @@
 #[derive(Debug, Clone)]
 pub struct State {
     pub index: usize,
-    pub info: i32,
+    pub info: String,
 }
 
 impl State {
-    pub fn new(index: usize, info: i32) -> Self {
+    pub fn new(index: usize, info: String) -> Self {
         Self { index, info }
     }
 }

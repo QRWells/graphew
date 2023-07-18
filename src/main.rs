@@ -1,17 +1,13 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-
-
-
-
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
     let mut native_options = eframe::NativeOptions::default();
-    native_options.initial_window_size = Some(egui::Vec2::new(1024.0, 768.0));
+    native_options.initial_window_size = Some(egui::Vec2::new(800f32, 600f32));
     eframe::run_native(
         "Graphew",
         native_options,
