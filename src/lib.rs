@@ -4,4 +4,5 @@ mod app;
 pub mod graph;
 pub mod settings;
 pub mod views;
+pub mod layout;
 pub use app::MainApp;

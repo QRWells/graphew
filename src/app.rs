@@ -15,6 +15,7 @@ use crate::{
         transition::Transition,
         translator::{SLIMTranslator, Translator},
     },
+    layout,
     settings::{self},
     views::about::AboutWindow,
 };
@@ -27,6 +28,7 @@ pub struct MainApp {
     graph: Graph<State, Transition, Directed>,
     sim: Simulation<State, f32>,
     loaded: bool,
+    layout: layout::Layout,
 
     selected_nodes: Vec<Node<State>>,
 
@@ -50,6 +52,7 @@ impl MainApp {
             graph: Graph::new(),
             sim: construct_simulation(&Graph::new()),
             loaded: false,
+            layout: layout::Layout::Radical,
             selected_nodes: vec![],
             about: None,
             settings_interaction: settings::SettingsInteraction::default(),
@@ -145,13 +148,19 @@ impl MainApp {
 
             ui.separator();
 
-            egui::Grid::new("check settings")
-                .num_columns(2)
-                .spacing([40.0, 4.0])
-                .striped(true)
-                .show(ui, |ui| {
-                    ui.checkbox(&mut self.settings_style.labels_always, "show labels");
-                });
+            ui.checkbox(&mut self.settings_style.labels_always, "show labels");
+
+            ui.separator();
+
+            egui::ComboBox::from_label("Layout").show_ui(ui, |ui| {
+                ui.style_mut().wrap = Some(false);
+                ui.set_min_width(60.0);
+                ui.selectable_value(&mut self.layout, layout::Layout::Radical, "Radical");
+            });
+
+            if ui.button("Layout").on_hover_text("Layout the graph").clicked() {
+                self.layout.layout(&mut self.graph);
+            }
         });
     }
 }
