@@ -4,9 +4,9 @@ use std::{
 };
 
 #[derive(Debug, Default)]
-pub struct RadicalLayout;
+pub struct RadialLayout;
 
-impl RadicalLayout {
+impl RadialLayout {
     pub fn layout<N: Clone, E: Clone>(graph: &mut egui_graphs::Graph<N, E, petgraph::Directed>) {
         let mut queue = VecDeque::new();
         let mut visited = HashSet::new();

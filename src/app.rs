@@ -55,7 +55,7 @@ impl MainApp {
             graph: Graph::new(),
             sim: construct_simulation(&Graph::new()),
             loaded: false,
-            // layout: layout::Layout::Radical,
+            // layout: layout::Layout::Radial,
             force: fdg_sim::force::fruchterman_reingold_weighted(100., 0.95),
             selected_nodes: vec![],
             about: None,
@@ -174,7 +174,7 @@ impl MainApp {
             //     .show_ui(ui, |ui| {
             //         ui.style_mut().wrap = Some(false);
             //         ui.set_min_width(60.0);
-            //         ui.selectable_value(&mut self.layout, layout::Layout::Radical, "Radical");
+            //         ui.selectable_value(&mut self.layout, layout::Layout::Radial, "Radial");
             //     });
 
             // if ui
