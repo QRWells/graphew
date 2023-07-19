@@ -53,7 +53,7 @@ pub fn construct_simulation(
 
     // initialize simulation
     let mut params = SimulationParameters::default();
-    let force = fdg_sim::force::fruchterman_reingold_weighted(100., 0.5);
+    let force = fdg_sim::force::fruchterman_reingold_weighted(100., 0.95);
     params.set_force(force);
 
     Simulation::from_graph(force_graph, params)

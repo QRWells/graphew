@@ -16,7 +16,7 @@ impl Default for SettingsNavigation {
         Self {
             screen_padding: 0.3,
             zoom_speed: 0.1,
-            zoom_and_pan_enabled: true,
+            zoom_and_pan_enabled: false,
         }
     }
 }

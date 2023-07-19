@@ -1,11 +1,15 @@
 use std::path::PathBuf;
 
 use crossbeam::channel::{unbounded, Receiver, Sender};
-use egui::{FontId, Layout, RichText, ScrollArea, Vec2, Visuals};
+use egui::{Layout, ScrollArea, Vec2, Visuals};
 use egui_graphs::{
     Change, Graph, GraphView, Node, SettingsInteraction, SettingsNavigation, SettingsStyle,
 };
-use fdg_sim::{glam::Vec3, Simulation};
+use fdg_sim::{
+    force::{Force, Value},
+    glam::Vec3,
+    Simulation,
+};
 use petgraph::Directed;
 
 use crate::{
@@ -15,21 +19,20 @@ use crate::{
         transition::Transition,
         translator::{SLIMTranslator, Translator},
     },
-    layout,
     settings::{self},
     views::about::AboutWindow,
 };
 
-const SIMULATION_DT: f32 = 0.015;
+const SIMULATION_DT: f32 = 0.035;
 
 pub struct MainApp {
     file: Option<PathBuf>,
 
     graph: Graph<State, Transition, Directed>,
     sim: Simulation<State, f32>,
+    force: Force<State, f32>,
     loaded: bool,
-    layout: layout::Layout,
-
+    // layout: layout::Layout,
     selected_nodes: Vec<Node<State>>,
 
     about: Option<AboutWindow>,
@@ -52,7 +55,8 @@ impl MainApp {
             graph: Graph::new(),
             sim: construct_simulation(&Graph::new()),
             loaded: false,
-            layout: layout::Layout::Radical,
+            // layout: layout::Layout::Radical,
+            force: fdg_sim::force::fruchterman_reingold_weighted(100., 0.95),
             selected_nodes: vec![],
             about: None,
             settings_interaction: settings::SettingsInteraction::default(),
@@ -92,7 +96,7 @@ impl MainApp {
                 graph.remove_edge(idx);
             }
 
-            self.sim.update(SIMULATION_DT);
+            self.sim.update_custom(&self.force, SIMULATION_DT);
 
             looped_nodes
         };
@@ -152,28 +156,40 @@ impl MainApp {
 
             ui.separator();
 
-            egui::ComboBox::from_label("Layout").show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
-                ui.set_min_width(60.0);
-                ui.selectable_value(&mut self.layout, layout::Layout::Radical, "Radical");
-            });
+            ui.label("Force settings");
 
-            if ui.button("Layout").on_hover_text("Layout the graph").clicked() {
-                self.layout.layout(&mut self.graph);
+            for (name, value) in self.force.dict_mut() {
+                match value {
+                    Value::Number(value, range) => {
+                        ui.add(egui::Slider::new(value, range.clone()).text(name));
+                    }
+                    Value::Bool(value) => {
+                        ui.add(egui::Checkbox::new(value, name.as_str()));
+                    }
+                };
             }
+
+            // egui::ComboBox::from_label("Layout")
+            //     .selected_text(format!("{:?}", self.layout))
+            //     .show_ui(ui, |ui| {
+            //         ui.style_mut().wrap = Some(false);
+            //         ui.set_min_width(60.0);
+            //         ui.selectable_value(&mut self.layout, layout::Layout::Radical, "Radical");
+            //     });
+
+            // if ui
+            //     .button("Layout")
+            //     .on_hover_text("Layout the graph")
+            //     .clicked()
+            // {
+            //     self.layout.layout(&mut self.graph);
+            // }
         });
     }
 }
 
 impl eframe::App for MainApp {
-    /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Examples of how to create different panels and windows.
-        // Pick whichever suits you.
-        // Tip: a good default choice is to just keep the `CentralPanel`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
-
         if self.dark_mode {
             ctx.set_visuals(Visuals::dark())
         } else {
@@ -250,10 +266,7 @@ impl eframe::App for MainApp {
                 ScrollArea::vertical().max_height(200.).show(ui, |ui| {
                     self.selected_nodes.iter().for_each(|node| {
                         if let Some(state) = node.data() {
-                            ui.label(
-                                RichText::new(format!("{}", state.info))
-                                    .font(FontId::proportional(18.0)),
-                            );
+                            ui.label(format!("{}", state.info));
                         }
                     });
                 });
@@ -285,7 +298,7 @@ impl eframe::App for MainApp {
                     .with_folding_depth(self.settings_interaction.folding_depth);
 
                 let navi_settings = SettingsNavigation::new()
-                    .with_fit_to_screen_enabled(false)
+                    .with_fit_to_screen_enabled(true)
                     .with_zoom_and_pan_enabled(self.settings_navigation.zoom_and_pan_enabled)
                     .with_screen_padding(self.settings_navigation.screen_padding)
                     .with_zoom_speed(self.settings_navigation.zoom_speed);
